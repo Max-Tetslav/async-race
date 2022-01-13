@@ -15,13 +15,15 @@ export default class Header {
   afterRender = async (): Promise<void> => {
     const homeLink: HTMLElement = document.getElementById('garage-link') as HTMLElement;
 
-    homeLink.addEventListener('click', (): void => {
+    homeLink.addEventListener('click', (e: MouseEvent): void => {
+      e.preventDefault();
       window.location.hash = '/';
     });
 
     const winnersLink: HTMLElement = document.getElementById('winners-link') as HTMLElement;
 
-    winnersLink.addEventListener('click', (): void => {
+    winnersLink.addEventListener('click', (e: MouseEvent): void => {
+      e.preventDefault();
       window.location.hash = '/winners';
     });
   };
