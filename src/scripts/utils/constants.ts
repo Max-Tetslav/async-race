@@ -7,12 +7,16 @@ export const OPTIONS_UPDATE_CURRENT_CAR = {
     'Content-Type': 'application/json',
   },
 };
+
 export const OPTIONS_DELETE_CURRENT_CAR = {
   method: 'DELETE',
 };
+
 export const OPTIONS_CREATE_CAR = {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
   },
 };
+
+export const DEFAULT_CAR_COLOR: string = '#000000';

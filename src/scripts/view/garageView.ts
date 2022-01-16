@@ -1,7 +1,9 @@
 import Car from '../components/car';
+import { Events } from '../types/events';
 import ICar from '../types/iCar';
 import IGarageView from '../types/iGarageView';
-import { deleteCurrentCar, getAllCars, getCurrentCar, updateCurrentCar } from '../utils/api';
+import { createCurrentCar, deleteCurrentCar, getAllCars, getCurrentCar, updateCurrentCar } from '../utils/api';
+import { DEFAULT_CAR_COLOR } from '../utils/constants';
 import { renderGarage } from '../utils/renderGarage';
 import { getCarID } from '../utils/utils';
 
@@ -10,14 +12,14 @@ export default class GarageView implements IGarageView {
     return `
     <div>
       <div>
-        <form class="create-car" id="create-car">
+        <form class="custom-car" id="custom-car">
           <input id="update-name-input" type="text" disabled="true" />
           <input id="update-color-input" type="color" disabled="true" />
           <button id="submit-update-car" disabled="true">Update</button>
         </form>
-        <form class="custom-car" id="custom-car">
-          <input type="text"/ >
-          <input type="color"/>
+        <form class="create-car" id="create-car">
+          <input id="create-name-input" type="text"/ >
+          <input id="create-color-input" type="color"/>
           <button id="submit-create-car">Create</button>
         </form>
       </div>
@@ -73,7 +75,7 @@ export default class GarageView implements IGarageView {
     const submitUpdate: HTMLButtonElement = document.getElementById('submit-update-car') as HTMLButtonElement;
 
     chooseCar.forEach((item: HTMLButtonElement) => {
-      item.addEventListener('click', async (e: MouseEvent): Promise<void> => {
+      item.addEventListener(Events.click, async (e: MouseEvent): Promise<void> => {
         await this.choseCarHandler(e);
         updateCarColor.disabled = false;
         updateCarName.disabled = false;
@@ -84,7 +86,7 @@ export default class GarageView implements IGarageView {
     const deleteCar: HTMLButtonElement[] = [...document.querySelectorAll('.delete-car')] as HTMLButtonElement[];
 
     deleteCar.forEach((item: HTMLButtonElement) => {
-      item.addEventListener('click', async (e: MouseEvent) => {
+      item.addEventListener(Events.click, async (e: MouseEvent) => {
         await this.deleteCarHandler(e);
       });
     });
@@ -99,32 +101,65 @@ export default class GarageView implements IGarageView {
   };
 
   addFormListeners = async (): Promise<void> => {
+    await this.updateCar();
+    await this.createCar();
+  };
+
+  updateCar = async (): Promise<void> => {
     const submitUpdate: HTMLButtonElement = document.getElementById('submit-update-car') as HTMLButtonElement;
     const updateCarName: HTMLInputElement = document.getElementById('update-name-input') as HTMLInputElement;
     const updateCarColor: HTMLInputElement = document.getElementById('update-color-input') as HTMLInputElement;
     const currentCar: ICar = await JSON.parse(localStorage.getItem('currentCar')!);
-    let newColor: null | string = null;
-    let newName: null | string = null;
 
-    updateCarName.addEventListener('input', (): void => {
-      newName = updateCarName.value ? updateCarName.value : currentCar.name;
+    let updatedName: null | string = null;
+    let updatedColor: null | string = null;
+
+    updateCarName.addEventListener(Events.input, (): void => {
+      updatedName = updateCarName.value || currentCar.name;
     });
-    updateCarColor.addEventListener('input', (): void => {
-      newColor = updateCarColor.value ? updateCarColor.value : currentCar.color;
+    updateCarColor.addEventListener(Events.input, (): void => {
+      updatedColor = updateCarColor.value || currentCar.color;
     });
 
-    newColor = updateCarColor.value ? updateCarColor.value : currentCar.color;
-    newName = updateCarName.value ? updateCarName.value : currentCar.name;
+    updatedColor = updateCarColor.value || currentCar.color;
+    updatedName = updateCarName.value || currentCar.name;
 
-    submitUpdate.addEventListener('click', async (e: MouseEvent): Promise<void> => {
+    submitUpdate.addEventListener(Events.click, async (e: MouseEvent): Promise<void> => {
       e.preventDefault();
-      await updateCurrentCar(localStorage.getItem('carID')!, newName!, newColor!);
-      updateCarColor.value = '#000000';
+      await updateCurrentCar(localStorage.getItem('carID')!, updatedName!, updatedColor!);
+      updateCarColor.value = DEFAULT_CAR_COLOR;
       updateCarName.value = '';
       updateCarName.placeholder = '';
       updateCarName.disabled = true;
       updateCarColor.disabled = true;
       submitUpdate.disabled = true;
+      await this.updateGarage();
+    });
+  };
+
+  createCar = async (): Promise<void> => {
+    const submitCreate: HTMLButtonElement = document.getElementById('submit-create-car') as HTMLButtonElement;
+    const createCarName: HTMLInputElement = document.getElementById('create-name-input') as HTMLInputElement;
+    const createCarColor: HTMLInputElement = document.getElementById('create-color-input') as HTMLInputElement;
+
+    let createdName: null | string = null;
+    let createdColor: null | string = null;
+
+    createCarName.addEventListener(Events.input, (): void => {
+      createdName = createCarName.value;
+    });
+    createCarColor.addEventListener(Events.input, (): void => {
+      createdColor = createCarColor.value;
+    });
+
+    createdColor = createdColor || DEFAULT_CAR_COLOR;
+
+    submitCreate.addEventListener(Events.click, async (e: MouseEvent): Promise<void> => {
+      e.preventDefault();
+      await createCurrentCar(createdName!, createdColor!);
+      createCarColor.value = DEFAULT_CAR_COLOR;
+      createCarName.value = '';
+      createCarName.placeholder = '';
       await this.updateGarage();
     });
   };

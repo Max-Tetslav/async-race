@@ -36,3 +36,16 @@ export const deleteCurrentCar = async (id: string) => {
 
   return response;
 };
+
+export const createCurrentCar = async (newName: string, newColor: string) => {
+  const request = await fetch(URL_ALL_CARS, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name: newName, color: newColor }),
+  });
+  const response = await request.json();
+
+  return response;
+};
