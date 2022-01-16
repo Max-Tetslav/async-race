@@ -1,7 +1,7 @@
 import Car from '../components/car';
 import ICar from '../types/iCar';
 import IGarageView from '../types/iGarageView';
-import { getAllCars, getCurrentCar, updateCurrentCar } from '../utils/api';
+import { deleteCurrentCar, getAllCars, getCurrentCar, updateCurrentCar } from '../utils/api';
 import { renderGarage } from '../utils/renderGarage';
 import { getCarID } from '../utils/utils';
 
@@ -72,7 +72,7 @@ export default class GarageView implements IGarageView {
     const updateCarColor: HTMLInputElement = document.getElementById('update-color-input') as HTMLInputElement;
     const submitUpdate: HTMLButtonElement = document.getElementById('submit-update-car') as HTMLButtonElement;
 
-    chooseCar.forEach((item: HTMLElement) => {
+    chooseCar.forEach((item: HTMLButtonElement) => {
       item.addEventListener('click', async (e: MouseEvent): Promise<void> => {
         await this.choseCarHandler(e);
         updateCarColor.disabled = false;
@@ -80,6 +80,22 @@ export default class GarageView implements IGarageView {
         submitUpdate.disabled = false;
       });
     });
+
+    const deleteCar: HTMLButtonElement[] = [...document.querySelectorAll('.delete-car')] as HTMLButtonElement[];
+
+    deleteCar.forEach((item: HTMLButtonElement) => {
+      item.addEventListener('click', async (e: MouseEvent) => {
+        await this.deleteCarHandler(e);
+      });
+    });
+  };
+
+  deleteCarHandler = async (e: MouseEvent): Promise<void> => {
+    const target: HTMLElement = e.target as HTMLElement;
+    const carID: string = getCarID(target.id);
+
+    await deleteCurrentCar(carID);
+    await this.updateGarage();
   };
 
   addFormListeners = async (): Promise<void> => {

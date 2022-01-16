@@ -44,7 +44,7 @@ export default class Car implements ICar {
             <button class="car-button stop-button" id="stop-${this.id}">B</button>
           </div>
           <button class="select-car" id="select-${this.id}">Select</button>
-          <button class="remove-car" id="remove-${this.id}">Remove</button>
+          <button class="delete-car" id="delete-${this.id}">Delete</button>
           <p>${this.name}</p>
         </div>
         <div class="road">

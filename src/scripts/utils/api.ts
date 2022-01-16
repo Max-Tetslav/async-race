@@ -1,4 +1,4 @@
-import { URL_ALL_CARS, URL_CURRENT_CAR } from './constants';
+import { URL_ALL_CARS, URL_CURRENT_CAR, OPTIONS_DELETE_CURRENT_CAR } from './constants';
 
 export const getAllCars = async () => {
   const request = await fetch(URL_ALL_CARS);
@@ -28,4 +28,11 @@ export const updateCurrentCar = async (id: string, newName: string, newColor: st
 
   console.log(response);
   // return response;
+};
+
+export const deleteCurrentCar = async (id: string) => {
+  const request = await fetch(URL_CURRENT_CAR(id), OPTIONS_DELETE_CURRENT_CAR);
+  const response = await request.json();
+
+  return response;
 };
