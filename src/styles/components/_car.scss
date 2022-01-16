@@ -1,0 +1,22 @@
+.car-controls{
+  display: flex;
+}
+
+.road{
+  width: 100%;
+  height: 50px;
+  position: relative;
+  display: flex;
+  border-bottom: 2px dotted black;
+}
+
+.car{
+  position: absolute;
+  bottom: -10px;
+}
+
+.flag{
+  position: absolute;
+  right: 150px;
+}
+

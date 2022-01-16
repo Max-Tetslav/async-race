@@ -1,14 +1,14 @@
 export default class Header {
   render = async (): Promise<string> => {
     return `
-      <header>
+      <div>
         <nav>
           <ul>
             <li><a id="garage-link" href="/#/">Garage</a></li>
             <li><a id="winners-link" href="/#/winners">Winners</a></li>
           </ul>
         </nav>
-      </header>
+      </div>
     `;
   };
 

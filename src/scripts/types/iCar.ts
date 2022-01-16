@@ -1,5 +1,5 @@
 export default interface ICar {
-  _name: string;
-  _color: string;
-  _id: number;
+  name: string;
+  color: string;
+  id: number;
 }

@@ -1,43 +1,57 @@
 import ICar from '../types/iCar';
+import { flag } from './svg/flag';
+import { car } from './svg/car';
 
 export default class Car implements ICar {
-  _name: string;
+  name: string;
 
-  _color: string;
+  color: string;
 
-  _id: number;
+  id: number;
 
   constructor(name: string, color: string, id: number) {
-    this._name = name;
-    this._color = color;
-    this._id = id;
+    this.name = name;
+    this.color = color;
+    this.id = id;
   }
 
   setName(newName: string): void {
-    this._name = newName;
+    this.name = newName;
   }
 
   getName(): string {
-    return this._name;
+    return this.name;
   }
 
   setColor(newColor: string): void {
-    this._color = newColor;
+    this.color = newColor;
   }
 
   getColor(): string {
-    return this._color;
+    return this.color;
   }
 
   getID(): number {
-    return this._id;
+    return this.id;
   }
 
-  render(): string {
+  render = (): string => {
     return `
       <div style='color: red'>
-        ${this.getColor()} машина ${this._name}
+        <div class="car-controls">
+          <div>
+            <button class="car-button start-button" id="start-${this.id}">A</button>
+            <button class="car-button stop-button" id="stop-${this.id}">B</button>
+          </div>
+          <button class="select-car" id="select-${this.id}">Select</button>
+          <button class="remove-car" id="remove-${this.id}">Remove</button>
+          <p>${this.name}</p>
+        </div>
+        <div class="road">
+          ${car(this.color)}
+          ${flag}
+        </div>
       </div>
     `;
-  }
+  };
 }
