@@ -1,11 +1,11 @@
 import Car from '../components/car';
-import { Events } from '../types/events';
+import { Events } from '../types/enums';
 import ICar from '../types/iCar';
 import IGarageView from '../types/iGarageView';
 import { createCurrentCar, deleteCurrentCar, getAllCars, getCurrentCar, updateCurrentCar } from '../utils/api';
-import { DEFAULT_CAR_COLOR } from '../utils/constants';
+import { DEFAULT_CAR_COLOR, MAX_GENERATE_NUM } from '../utils/constants';
 import { renderGarage } from '../utils/renderGarage';
-import { getCarID } from '../utils/utils';
+import { getCarID, getRandomHEX, getRandomName } from '../utils/utils';
 
 export default class GarageView implements IGarageView {
   render = async (): Promise<string> => {
@@ -103,6 +103,7 @@ export default class GarageView implements IGarageView {
   addFormListeners = async (): Promise<void> => {
     await this.updateCar();
     await this.createCar();
+    await this.generateCars();
   };
 
   updateCar = async (): Promise<void> => {
@@ -163,4 +164,18 @@ export default class GarageView implements IGarageView {
       await this.updateGarage();
     });
   };
+
+  generateCars = async () => {
+    const generateButton: HTMLButtonElement = document.getElementById('generate-cars') as HTMLButtonElement;
+
+    generateButton.addEventListener(Events.click, async () => {
+      for (let i = 0; i < MAX_GENERATE_NUM; i += 1) {
+        const name = getRandomName();
+        const color = getRandomHEX();
+  
+        await createCurrentCar(name, color);
+      }
+      await this.updateGarage();
+    });
+  }
 }
