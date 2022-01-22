@@ -1,7 +1,7 @@
-import IWinnersView from '../types/iWinnersView';
+import IWinnersView from '../types/interfaces/iWinnersView';
 
 export default class WinnersView implements IWinnersView {
-  render = async (): Promise<string> => {
+  render = (): string => {
     return `
       <h1 style={color: yellow}>Winners</h1>
     `;

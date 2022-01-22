@@ -1,15 +1,13 @@
-import { URL_ALL_CARS, URL_CURRENT_CAR, OPTIONS_DELETE_CURRENT_CAR } from './constants';
+import { URL_ALL_CARS, URL_CURRENT_CAR, OPTIONS_DELETE_CURRENT_CAR } from './consts';
 
 export const getAllCars = async () => {
   const request = await fetch(URL_ALL_CARS);
-  const response = await request.json();
-
-  return response;
+  return request.json();
 };
 
 export const getCurrentCar = async (id: string) => {
   const request = await fetch(URL_CURRENT_CAR(id));
-  const response = await request.json();
+  const response = request.json();
   const carString = JSON.stringify(response);
   localStorage.setItem('currentCar', carString);
 
@@ -24,17 +22,13 @@ export const updateCurrentCar = async (id: string, newName: string, newColor: st
     },
     body: JSON.stringify({ name: newName, color: newColor }),
   });
-  const response = await request.json();
-
-  console.log(response);
-  // return response;
+  
+  console.log(request.json());
 };
 
 export const deleteCurrentCar = async (id: string) => {
   const request = await fetch(URL_CURRENT_CAR(id), OPTIONS_DELETE_CURRENT_CAR);
-  const response = await request.json();
-
-  return response;
+  return request.json();
 };
 
 export const createCurrentCar = async (newName: string, newColor: string) => {
@@ -45,7 +39,5 @@ export const createCurrentCar = async (newName: string, newColor: string) => {
     },
     body: JSON.stringify({ name: newName, color: newColor }),
   });
-  const response = await request.json();
-
-  return response;
+  return request.json();
 };

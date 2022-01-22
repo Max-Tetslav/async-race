@@ -1,6 +1,6 @@
-import Car from '../components/car';
+import Car from '../../components/car';
 
-export const renderGarage = async (data: Car[]) => {
+export const renderGarage = (data: Car[]): void => {
   const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
 
   data.map((item: Car) => {

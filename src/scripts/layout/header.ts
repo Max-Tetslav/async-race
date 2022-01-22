@@ -1,5 +1,5 @@
 export default class Header {
-  render = async (): Promise<string> => {
+  render = (): string => {
     return `
       <div>
         <nav>
@@ -12,7 +12,7 @@ export default class Header {
     `;
   };
 
-  afterRender = async (): Promise<void> => {
+  afterRender = (): void => {
     const homeLink: HTMLElement = document.getElementById('garage-link') as HTMLElement;
 
     homeLink.addEventListener('click', (e: MouseEvent): void => {

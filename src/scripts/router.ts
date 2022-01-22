@@ -1,9 +1,9 @@
-import IViewsList from '../types/iViewsList';
-import { IRoutesList, IStaticLayoutList } from '../types/iRouter';
-import GarageView from '../view/garageView';
-import WinnersView from '../view/winnersView';
-import Header from '../layout/header';
-import Footer from '../layout/footer';
+import IViewsList from './types/interfaces/iViewsList';
+import { IRoutesList, IStaticLayoutList } from './types/interfaces/iRouter';
+import GarageView from './view/garageView';
+import WinnersView from './view/winnersView';
+import Header from './layout/header';
+import Footer from './layout/footer';
 
 const viewsList: IViewsList = {
   garage: new GarageView(),
@@ -47,14 +47,14 @@ const Router = async (): Promise<void> => {
   const contentRoot = document.getElementById('content') as HTMLElement;
   const footerRoot: HTMLElement = document.getElementById('footer') as HTMLElement;
 
-  headerRoot.innerHTML = await staticLayoutList.header.render();
-  await staticLayoutList.header.afterRender();
-  footerRoot.innerHTML = await staticLayoutList.footer.render();
+  headerRoot.innerHTML = staticLayoutList.header.render();
+  staticLayoutList.header.afterRender();
+  footerRoot.innerHTML = staticLayoutList.footer.render();
 
   const url: string = getURL();
   const page: GarageView | WinnersView = routesList[url];
 
-  contentRoot.innerHTML = await page.render();
+  contentRoot.innerHTML = page.render();
   await page.afterRender();
 };
 

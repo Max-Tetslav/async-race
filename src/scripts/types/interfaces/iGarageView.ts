@@ -1,4 +1,4 @@
 export default interface IGarageView {
-  render: () => Promise<string>;
+  render: () => string;
   afterRender: () => Promise<void>;
 }

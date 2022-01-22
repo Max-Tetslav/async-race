@@ -1,14 +1,16 @@
 import Car from '../components/car';
 import { Events } from '../types/enums';
-import ICar from '../types/iCar';
-import IGarageView from '../types/iGarageView';
-import { createCurrentCar, deleteCurrentCar, getAllCars, getCurrentCar, updateCurrentCar } from '../utils/api';
-import { DEFAULT_CAR_COLOR, MAX_GENERATE_NUM } from '../utils/constants';
-import { renderGarage } from '../utils/renderGarage';
-import { getCarID, getRandomHEX, getRandomName } from '../utils/utils';
+import ICar from '../types/interfaces/iCar';
+import IGarageView from '../types/interfaces/iGarageView';
+import { createCurrentCar, deleteCurrentCar, getAllCars, getCurrentCar, updateCurrentCar } from '../services/api';
+import { DEFAULT_CAR_COLOR, MAX_GENERATE_NUM } from '../utils/consts';
+import { renderGarage } from '../utils/helpers/renderGarage';
+import { getCarID } from '../utils/helpers/getCarId';
+import { getRandomCarName } from '../utils/helpers/getRandomCarName';
+import { getRandomHEX } from '../utils/helpers/getRandomHex';
 
-export default class GarageView implements IGarageView {
-  render = async (): Promise<string> => {
+export default class GarageView implements IGarageView{
+  render = (): string => {
     return `
     <div>
       <div>
@@ -38,7 +40,7 @@ export default class GarageView implements IGarageView {
     const cars: ICar[] = await getAllCars();
     const carsObjects: Car[] = cars.map((item: ICar) => new Car(item.name, item.color, item.id));
 
-    await renderGarage(carsObjects);
+    renderGarage(carsObjects);
 
     await this.addCarListeners();
     await this.addFormListeners();
@@ -64,7 +66,7 @@ export default class GarageView implements IGarageView {
     const cars: ICar[] = await getAllCars();
     const carsObjects: Car[] = cars.map((item: ICar) => new Car(item.name, item.color, item.id));
 
-    await renderGarage(carsObjects);
+    renderGarage(carsObjects);
     await this.addCarListeners();
   };
 
@@ -112,8 +114,8 @@ export default class GarageView implements IGarageView {
     const updateCarColor: HTMLInputElement = document.getElementById('update-color-input') as HTMLInputElement;
     const currentCar: ICar = await JSON.parse(localStorage.getItem('currentCar')!);
 
-    let updatedName: null | string = null;
-    let updatedColor: null | string = null;
+    let updatedName: string = '';
+    let updatedColor: string = '';
 
     updateCarName.addEventListener(Events.input, (): void => {
       updatedName = updateCarName.value || currentCar.name;
@@ -143,21 +145,21 @@ export default class GarageView implements IGarageView {
     const createCarName: HTMLInputElement = document.getElementById('create-name-input') as HTMLInputElement;
     const createCarColor: HTMLInputElement = document.getElementById('create-color-input') as HTMLInputElement;
 
-    let createdName: null | string = null;
-    let createdColor: null | string = null;
+    let newName: string = '';
+    let newColor: string = '';
 
     createCarName.addEventListener(Events.input, (): void => {
-      createdName = createCarName.value;
+      newName = createCarName.value;
     });
     createCarColor.addEventListener(Events.input, (): void => {
-      createdColor = createCarColor.value;
+      newColor = createCarColor.value;
     });
 
-    createdColor = createdColor || DEFAULT_CAR_COLOR;
+    newColor = newColor || DEFAULT_CAR_COLOR;
 
     submitCreate.addEventListener(Events.click, async (e: MouseEvent): Promise<void> => {
       e.preventDefault();
-      await createCurrentCar(createdName!, createdColor!);
+      await createCurrentCar(newName!, newColor!);
       createCarColor.value = DEFAULT_CAR_COLOR;
       createCarName.value = '';
       createCarName.placeholder = '';
@@ -170,7 +172,7 @@ export default class GarageView implements IGarageView {
 
     generateButton.addEventListener(Events.click, async () => {
       for (let i = 0; i < MAX_GENERATE_NUM; i += 1) {
-        const name = getRandomName();
+        const name = getRandomCarName();
         const color = getRandomHEX();
   
         await createCurrentCar(name, color);

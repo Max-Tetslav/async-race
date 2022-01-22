@@ -1,5 +1,5 @@
 export default class Footer {
-  render = async (): Promise<string> => {
+  render = (): string => {
     return `
       <div class="footer-wrapper">
         <a class="footer__link author-container" href="https://github.com/Max-Tetslav" target="_blank">
@@ -12,6 +12,4 @@ export default class Footer {
       </div>
     `;
   };
-
-  afterRender = async (): Promise<void> => {};
 }

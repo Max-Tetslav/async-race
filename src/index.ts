@@ -1,5 +1,6 @@
-import Router from './scripts/utils/router';
+import { Events } from './scripts/types/enums';
+import Router from './scripts/router';
 import './style.scss';
 
-window.addEventListener('hashchange', Router);
-window.addEventListener('load', Router);
+window.addEventListener(Events.hashchange, Router);
+window.addEventListener(Events.load, Router);

@@ -1,4 +1,4 @@
-import ICar from '../types/iCar';
+import ICar from '../types/interfaces/iCar';
 import { flag } from './svg/flag';
 import { car } from './svg/car';
 
