@@ -1,5 +1,13 @@
-export const URL_ALL_CARS: string = 'http://127.0.0.1:3000/garage';
-export const URL_CURRENT_CAR = (id: string): string => `http://127.0.0.1:3000/garage/${id}`;
+export const BASE_URL: string = 'http://127.0.0.1:3000';
+
+export const GARAGE_URL: string = `${BASE_URL}/garage/`;
+export const ENGINE_URL: string = `${BASE_URL}/engine/`;
+export const WINNERS_URL: string = `${BASE_URL}/winners/`;
+
+export const DEFAULT_CARS_PER_PAGE_LIMIT: number = 7;
+
+export const ALL_CARS_URL = (page: number, limit: number) => `${GARAGE_URL}?_page=${page}&_limit=${limit}`;
+export const CURRENT_CAR_URL = (id: string): string => `${GARAGE_URL}${id}`;
 
 export const OPTIONS_UPDATE_CURRENT_CAR = {
   method: 'PUT',

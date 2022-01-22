@@ -4,46 +4,81 @@ import ICar from '../types/interfaces/iCar';
 import IGarageView from '../types/interfaces/iGarageView';
 import { createCurrentCar, deleteCurrentCar, getAllCars, getCurrentCar, updateCurrentCar } from '../services/api';
 import { DEFAULT_CAR_COLOR, MAX_GENERATE_NUM } from '../utils/consts';
-import { renderGarage } from '../utils/helpers/renderGarage';
-import { getCarID } from '../utils/helpers/getCarId';
-import { getRandomCarName } from '../utils/helpers/getRandomCarName';
-import { getRandomHEX } from '../utils/helpers/getRandomHex';
+import getCarID from '../utils/helpers/getCarId';
+import getRandomCarName from '../utils/helpers/getRandomCarName';
+import getRandomHEX from '../utils/helpers/getRandomHex';
+import { DEFAULT_CARS_PER_PAGE_LIMIT } from '../services/consts';
+import store from '../services/store';
+import { CarList } from '../types/types';
 
-export default class GarageView implements IGarageView{
+interface CarReq {
+  cars: CarList;
+  carsNum: number;
+}
+
+export default class GarageView implements IGarageView {
   render = (): string => {
     return `
-    <div>
-      <div>
-        <form class="custom-car" id="custom-car">
+    <div class="content-wrapper">
+      <div class="forms-container">
+        <form class="custom-car car-form" id="custom-car">
           <input id="update-name-input" type="text" disabled="true" />
           <input id="update-color-input" type="color" disabled="true" />
           <button id="submit-update-car" disabled="true">Update</button>
         </form>
-        <form class="create-car" id="create-car">
+        <form class="create-car car-form" id="create-car">
           <input id="create-name-input" type="text"/ >
           <input id="create-color-input" type="color"/>
           <button id="submit-create-car">Create</button>
         </form>
+        <div>
+          <button id="start-race">Race</button>
+          <button id="reset-race">Reset</button>
+          <button id="generate-cars">Generate Cars</button>
+        </div>
       </div>
-      <div>
-        <button id="start-race">Race</button>
-        <button id="reset-race">Reset</button>
-        <button id="generate-cars">Generate Cars</button>
-      </div>
-      <h1 style={color: yellow}>GARAGE</h1>
-      <div id="cars-root"></div>      
+      <h1 style={color: yellow}>GARAGE <span id="cars-num"></span></h1>
+      <div class="cars-root" id="cars-root"></div>    
+      <div class="garage-nav" id="garage-nav">
+        <button id="prev-garage-page">Prev</button>
+        <p>Page: <span id="garage-page"></span></p>
+        <button id="next-garage-page">Next</button>
+      </div>  
     </div>
     `;
   };
 
   afterRender = async (): Promise<void> => {
-    const cars: ICar[] = await getAllCars();
+    const { cars, carsNum }: CarReq = await getAllCars(store.garagePage, DEFAULT_CARS_PER_PAGE_LIMIT);
+    console.log(cars, carsNum);
     const carsObjects: Car[] = cars.map((item: ICar) => new Car(item.name, item.color, item.id));
 
-    renderGarage(carsObjects);
+    this.renderGarage(carsObjects, carsNum);
 
     await this.addCarListeners();
     await this.addFormListeners();
+    await this.addGaragaNavListeners();
+  };
+
+  renderGarage = (data: Car[], carsNum: number): void => {
+    const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
+
+    data.map((item: Car) => {
+      const car = new Car(item.name, item.color, item.id);
+
+      target.innerHTML += car.render();
+
+      return car;
+    });
+    this.renderCarsNum(carsNum);
+    this.upadatePage();
+    this.disableGarageNav();
+  };
+
+  upadatePage = (): void => {
+    const target: HTMLElement = document.getElementById('garage-page') as HTMLElement;
+
+    target.innerHTML = store.garagePage.toString();
   };
 
   choseCarHandler = async (e: Event): Promise<void> => {
@@ -63,11 +98,17 @@ export default class GarageView implements IGarageView{
     const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
     target.innerHTML = '';
 
-    const cars: ICar[] = await getAllCars();
+    const { cars, carsNum }: CarReq = await getAllCars(store.garagePage, DEFAULT_CARS_PER_PAGE_LIMIT);
     const carsObjects: Car[] = cars.map((item: ICar) => new Car(item.name, item.color, item.id));
 
-    renderGarage(carsObjects);
+    this.renderGarage(carsObjects, carsNum);
     await this.addCarListeners();
+  };
+
+  renderCarsNum = (carsNum: number): void => {
+    const target: HTMLElement = document.getElementById('cars-num') as HTMLElement;
+
+    target.innerHTML = `(${carsNum})`;
   };
 
   addCarListeners = async (): Promise<void> => {
@@ -106,6 +147,45 @@ export default class GarageView implements IGarageView{
     await this.updateCar();
     await this.createCar();
     await this.generateCars();
+  };
+
+  disableGarageNav = (): void => {
+    const nextBtn = document.getElementById('next-garage-page') as HTMLButtonElement;
+    const prevBtn = document.getElementById('prev-garage-page') as HTMLButtonElement;
+
+    nextBtn.disabled = false;
+    prevBtn.disabled = false;
+
+    if (store.garagePage === 1) {
+      prevBtn.disabled = true;
+    }
+    if (store.garagePage === Math.ceil(store.carsNum / 7)) {
+      nextBtn.disabled = true;
+    }
+  };
+
+  switchPage = (): void => {
+    this.updateGarage();
+    this.upadatePage();
+  };
+
+  addGaragaNavListeners = async (): Promise<void> => {
+    const nextBtn: HTMLButtonElement = document.getElementById('next-garage-page') as HTMLButtonElement;
+    const prevBtn: HTMLButtonElement = document.getElementById('prev-garage-page') as HTMLButtonElement;
+
+    nextBtn.addEventListener('click', () => {
+      if (store.garagePage < Math.ceil(store.carsNum / 7)) {
+        store.garagePage += 1;
+        this.switchPage();
+      }
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (store.garagePage !== 1) {
+        store.garagePage -= 1;
+        this.switchPage();
+      }
+    });
   };
 
   updateCar = async (): Promise<void> => {
@@ -167,17 +247,17 @@ export default class GarageView implements IGarageView{
     });
   };
 
-  generateCars = async () => {
+  generateCars = async (): Promise<void> => {
     const generateButton: HTMLButtonElement = document.getElementById('generate-cars') as HTMLButtonElement;
 
     generateButton.addEventListener(Events.click, async () => {
       for (let i = 0; i < MAX_GENERATE_NUM; i += 1) {
-        const name = getRandomCarName();
-        const color = getRandomHEX();
-  
-        await createCurrentCar(name, color);
+        const name: string = getRandomCarName();
+        const color: string = getRandomHEX();
+
+        createCurrentCar(name, color);
       }
       await this.updateGarage();
     });
-  }
+  };
 }
