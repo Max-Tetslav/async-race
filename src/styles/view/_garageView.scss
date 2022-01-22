@@ -1,0 +1,25 @@
+.content-wrapper{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 1440px;
+}
+
+.cars-root{
+  width: 100%;
+}
+
+.forms-container{
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.car-form{
+  display: flex;
+}
+
+.garage-nav{
+  display: flex;
+}
