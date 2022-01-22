@@ -1,6 +1,6 @@
 import { CAR_BRAND_NAMES, CAR_MODEL_NAMES } from '../consts';
 
-export const getRandomCarName = (): string => {
+export default function getRandomCarName(): string {
   const randomBrand: number = Math.floor(Math.random() * 10);
   const randomModel: number = Math.floor(Math.random() * 10);
 

@@ -1,4 +1,4 @@
-import Footer from '../../layout/footer'
+import Footer from '../../layout/footer';
 import Header from '../../layout/header';
 import GarageView from '../../view/garageView';
 import WinnersView from '../../view/winnersView';

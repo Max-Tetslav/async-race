@@ -1,14 +1,12 @@
 export default class Header {
   render = (): string => {
     return `
-      <div>
-        <nav>
-          <ul>
-            <li><a id="garage-link" href="/#/">Garage</a></li>
-            <li><a id="winners-link" href="/#/winners">Winners</a></li>
-          </ul>
-        </nav>
-      </div>
+      <nav>
+        <ul class="nav-list">
+          <li><a id="garage-link" href="/#/">Garage</a></li>
+          <li><a id="winners-link" href="/#/winners">Winners</a></li>
+        </ul>
+      </nav>
     `;
   };
 
