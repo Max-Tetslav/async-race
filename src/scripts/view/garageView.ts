@@ -2,14 +2,27 @@ import Car from '../components/car';
 import { Events } from '../types/enums';
 import ICar from '../types/interfaces/iCar';
 import IGarageView from '../types/interfaces/iGarageView';
-import { createCurrentCar, deleteCurrentCar, getAllCars, getCurrentCar, updateCurrentCar } from '../services/api';
-import { DEFAULT_CAR_COLOR, MAX_GENERATE_NUM } from '../utils/consts';
+import { CAR_WIDTH, DEFAULT_CAR_COLOR, MAX_GENERATE_NUM } from '../utils/consts';
 import getCarID from '../utils/helpers/getCarId';
 import getRandomCarName from '../utils/helpers/getRandomCarName';
 import getRandomHEX from '../utils/helpers/getRandomHex';
 import { DEFAULT_CARS_PER_PAGE_LIMIT } from '../services/consts';
 import store from '../services/store';
 import { CarList } from '../types/types';
+import { getDistanceBetweenElements } from '../utils/helpers/getHtmlDistance';
+import setAnimation from '../utils/helpers/setAnimation';
+import IDriveStatus from '../types/interfaces/iDriveStatus';
+import IEngineResp from '../types/interfaces/iEngineResp';
+import {
+  createCurrentCar,
+  deleteCurrentCar,
+  getAllCars,
+  getCurrentCar,
+  startEngine,
+  stopEngine,
+  switchDriveMode,
+  updateCurrentCar,
+} from '../services/api';
 
 interface CarReq {
   cars: CarList;
@@ -55,137 +68,15 @@ export default class GarageView implements IGarageView {
 
     this.renderGarage(carsObjects, carsNum);
 
-    await this.addCarListeners();
     await this.addFormListeners();
-    await this.addGaragaNavListeners();
-  };
-
-  renderGarage = (data: Car[], carsNum: number): void => {
-    const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
-
-    data.map((item: Car) => {
-      const car = new Car(item.name, item.color, item.id);
-
-      target.innerHTML += car.render();
-
-      return car;
-    });
-    this.renderCarsNum(carsNum);
-    this.upadatePage();
-    this.disableGarageNav();
-  };
-
-  upadatePage = (): void => {
-    const target: HTMLElement = document.getElementById('garage-page') as HTMLElement;
-
-    target.innerHTML = store.garagePage.toString();
-  };
-
-  choseCarHandler = async (e: Event): Promise<void> => {
-    const updateCarName: HTMLInputElement = document.getElementById('update-name-input') as HTMLInputElement;
-    const updateCarColor: HTMLInputElement = document.getElementById('update-color-input') as HTMLInputElement;
-    const target: HTMLElement = e.target as HTMLElement;
-    const carID: string = getCarID(target.id);
-    const car: ICar = await getCurrentCar(carID);
-
-    localStorage.setItem('carID', carID);
-
-    updateCarName.placeholder = car.name;
-    updateCarColor.value = car.color;
-  };
-
-  updateGarage = async (): Promise<void> => {
-    const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
-    target.innerHTML = '';
-
-    const { cars, carsNum }: CarReq = await getAllCars(store.garagePage, DEFAULT_CARS_PER_PAGE_LIMIT);
-    const carsObjects: Car[] = cars.map((item: ICar) => new Car(item.name, item.color, item.id));
-
-    this.renderGarage(carsObjects, carsNum);
     await this.addCarListeners();
-  };
-
-  renderCarsNum = (carsNum: number): void => {
-    const target: HTMLElement = document.getElementById('cars-num') as HTMLElement;
-
-    target.innerHTML = `(${carsNum})`;
-  };
-
-  addCarListeners = async (): Promise<void> => {
-    const chooseCar: HTMLButtonElement[] = [...document.querySelectorAll('.select-car')] as HTMLButtonElement[];
-    const updateCarName: HTMLInputElement = document.getElementById('update-name-input') as HTMLInputElement;
-    const updateCarColor: HTMLInputElement = document.getElementById('update-color-input') as HTMLInputElement;
-    const submitUpdate: HTMLButtonElement = document.getElementById('submit-update-car') as HTMLButtonElement;
-
-    chooseCar.forEach((item: HTMLButtonElement) => {
-      item.addEventListener(Events.click, async (e: MouseEvent): Promise<void> => {
-        await this.choseCarHandler(e);
-        updateCarColor.disabled = false;
-        updateCarName.disabled = false;
-        submitUpdate.disabled = false;
-      });
-    });
-
-    const deleteCar: HTMLButtonElement[] = [...document.querySelectorAll('.delete-car')] as HTMLButtonElement[];
-
-    deleteCar.forEach((item: HTMLButtonElement) => {
-      item.addEventListener(Events.click, async (e: MouseEvent) => {
-        await this.deleteCarHandler(e);
-      });
-    });
-  };
-
-  deleteCarHandler = async (e: MouseEvent): Promise<void> => {
-    const target: HTMLElement = e.target as HTMLElement;
-    const carID: string = getCarID(target.id);
-
-    await deleteCurrentCar(carID);
-    await this.updateGarage();
+    await this.addGaragaNavListeners();
   };
 
   addFormListeners = async (): Promise<void> => {
     await this.updateCar();
     await this.createCar();
     await this.generateCars();
-  };
-
-  disableGarageNav = (): void => {
-    const nextBtn = document.getElementById('next-garage-page') as HTMLButtonElement;
-    const prevBtn = document.getElementById('prev-garage-page') as HTMLButtonElement;
-
-    nextBtn.disabled = false;
-    prevBtn.disabled = false;
-
-    if (store.garagePage === 1) {
-      prevBtn.disabled = true;
-    }
-    if (store.garagePage === Math.ceil(store.carsNum / 7)) {
-      nextBtn.disabled = true;
-    }
-  };
-
-  switchPage = (): void => {
-    this.updateGarage();
-    this.upadatePage();
-  };
-
-  addGaragaNavListeners = async (): Promise<void> => {
-    const nextBtn: HTMLButtonElement = document.getElementById('next-garage-page') as HTMLButtonElement;
-    const prevBtn: HTMLButtonElement = document.getElementById('prev-garage-page') as HTMLButtonElement;
-
-    nextBtn.addEventListener('click', () => {
-      if (store.garagePage < Math.ceil(store.carsNum / 7)) {
-        store.garagePage += 1;
-        this.switchPage();
-      }
-    });
-
-    prevBtn.addEventListener('click', () => {
-      if (store.garagePage !== 1) {
-        store.garagePage -= 1;
-        this.switchPage();
-      }
-    });
   };
 
   updateCar = async (): Promise<void> => {
@@ -258,6 +149,189 @@ export default class GarageView implements IGarageView {
         createCurrentCar(name, color);
       }
       await this.updateGarage();
+    });
+  };
+
+  renderGarage = (data: Car[], carsNum: number): void => {
+    const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
+
+    data.map((item: Car) => {
+      const car = new Car(item.name, item.color, item.id);
+
+      target.innerHTML += car.render();
+
+      return car;
+    });
+    this.renderCarsNum(carsNum);
+    this.upadatePage();
+    this.disableGarageNav();
+  };
+
+  updateGarage = async (): Promise<void> => {
+    const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
+    target.innerHTML = '';
+
+    const { cars, carsNum }: CarReq = await getAllCars(store.garagePage, DEFAULT_CARS_PER_PAGE_LIMIT);
+    const carsObjects: Car[] = cars.map((item: ICar) => new Car(item.name, item.color, item.id));
+
+    this.renderGarage(carsObjects, carsNum);
+    await this.addCarListeners();
+  };
+
+  renderCarsNum = (carsNum: number): void => {
+    const target: HTMLElement = document.getElementById('cars-num') as HTMLElement;
+
+    target.innerHTML = `(${carsNum})`;
+  };
+
+  addCarListeners = async (): Promise<void> => {
+    const updateCarName: HTMLInputElement = document.getElementById('update-name-input') as HTMLInputElement;
+    const updateCarColor: HTMLInputElement = document.getElementById('update-color-input') as HTMLInputElement;
+    const submitUpdate: HTMLButtonElement = document.getElementById('submit-update-car') as HTMLButtonElement;
+    const chooseCar: HTMLButtonElement[] = [...document.querySelectorAll('.select-car')] as HTMLButtonElement[];
+
+    chooseCar.forEach((item: HTMLButtonElement) => {
+      item.addEventListener(Events.click, async (e: MouseEvent): Promise<void> => {
+        await this.choseCarHandler(e);
+        updateCarColor.disabled = false;
+        updateCarName.disabled = false;
+        submitUpdate.disabled = false;
+      });
+    });
+
+    const deleteCar: HTMLButtonElement[] = [...document.querySelectorAll('.delete-car')] as HTMLButtonElement[];
+
+    deleteCar.forEach((item: HTMLButtonElement) => {
+      item.addEventListener(Events.click, async (e: MouseEvent) => {
+        await this.deleteCarHandler(e);
+      });
+    });
+
+    const startBtn: HTMLButtonElement[] = [...document.querySelectorAll('.start-button')] as HTMLButtonElement[];
+
+    startBtn.forEach((item: HTMLButtonElement) => {
+      item.addEventListener(Events.click, async (e: Event) => {
+        await this.startCarHandler(e);
+      });
+    });
+
+    const stopBtn: HTMLButtonElement[] = [...document.querySelectorAll('.stop-button')] as HTMLButtonElement[];
+
+    stopBtn.forEach((item: HTMLButtonElement) => {
+      item.disabled = true;
+      item.addEventListener(Events.click, async (e: Event) => {
+        await this.stopCarHandler(e);
+      });
+    });
+  };
+
+  choseCarHandler = async (e: Event): Promise<void> => {
+    const updateCarName: HTMLInputElement = document.getElementById('update-name-input') as HTMLInputElement;
+    const updateCarColor: HTMLInputElement = document.getElementById('update-color-input') as HTMLInputElement;
+    const target: HTMLElement = e.target as HTMLElement;
+    const carID: string = getCarID(target.id);
+    const car: ICar = await getCurrentCar(carID);
+
+    localStorage.setItem('carID', carID);
+
+    updateCarName.placeholder = car.name;
+    updateCarColor.value = car.color;
+  };
+
+  deleteCarHandler = async (e: MouseEvent): Promise<void> => {
+    const target: HTMLElement = e.target as HTMLElement;
+    const carID: string = getCarID(target.id);
+
+    await deleteCurrentCar(carID);
+    await this.updateGarage();
+  };
+
+  startCarHandler = async (e: Event): Promise<void> => {
+    const target: HTMLButtonElement = e.target as HTMLButtonElement;
+    const carID: string = getCarID(target.id);
+    const { velocity, distance }: IEngineResp = await startEngine(carID);
+    const drivingTime = Math.round(distance / velocity);
+
+    const car: HTMLElement = document.getElementById(`car-${carID}`) as HTMLElement;
+    const flag: HTMLElement = document.getElementById(`flag-${carID}`) as HTMLElement;
+    const htmlDistance = Math.floor(getDistanceBetweenElements(car, flag)) + CAR_WIDTH;
+
+    store.animation[`car-${carID}`] = setAnimation(car, htmlDistance, drivingTime);
+
+    const stopBtn: HTMLButtonElement = document.getElementById(`stop-${carID}`) as HTMLButtonElement;
+    target.disabled = true;
+    stopBtn.disabled = false;
+
+    const { success } = await this.driveModeHandler(e);
+
+    if (!success) window.cancelAnimationFrame(store.animation[`car-${carID}`].animationId);
+
+    // return { succes, carId, time };
+  };
+
+  stopCarHandler = async (e: Event): Promise<void> => {
+    const target: HTMLButtonElement = e.target as HTMLButtonElement;
+    const carID: string = getCarID(target.id);
+    window.cancelAnimationFrame(store.animation[`car-${carID}`].animationId);
+    await stopEngine(carID);
+    const car: HTMLElement = document.getElementById(`car-${carID}`) as HTMLElement;
+
+    const startBtn: HTMLButtonElement = document.getElementById(`start-${carID}`) as HTMLButtonElement;
+    target.disabled = true;
+    startBtn.disabled = false;
+
+    car.style.transform = `translateX(0px)`;
+  };
+
+  driveModeHandler = async (e: Event): Promise<IDriveStatus> => {
+    const target: HTMLElement = e.target as HTMLElement;
+    const carID: string = getCarID(target.id);
+    const response = await switchDriveMode(carID);
+    return response;
+  };
+
+  disableGarageNav = (): void => {
+    const nextBtn = document.getElementById('next-garage-page') as HTMLButtonElement;
+    const prevBtn = document.getElementById('prev-garage-page') as HTMLButtonElement;
+
+    nextBtn.disabled = false;
+    prevBtn.disabled = false;
+
+    if (store.garagePage === 1) {
+      prevBtn.disabled = true;
+    }
+    if (store.garagePage === Math.ceil(store.carsNum / 7)) {
+      nextBtn.disabled = true;
+    }
+  };
+
+  upadatePage = (): void => {
+    const target: HTMLElement = document.getElementById('garage-page') as HTMLElement;
+
+    target.innerHTML = store.garagePage.toString();
+  };
+
+  switchPage = (): void => {
+    this.updateGarage();
+    this.upadatePage();
+  };
+
+  addGaragaNavListeners = async (): Promise<void> => {
+    const nextBtn: HTMLButtonElement = document.getElementById('next-garage-page') as HTMLButtonElement;
+    const prevBtn: HTMLButtonElement = document.getElementById('prev-garage-page') as HTMLButtonElement;
+
+    nextBtn.addEventListener(Events.click, () => {
+      if (store.garagePage < Math.ceil(store.carsNum / 7)) {
+        store.garagePage += 1;
+        this.switchPage();
+      }
+    });
+
+    prevBtn.addEventListener(Events.click, () => {
+      if (store.garagePage !== 1) {
+        store.garagePage -= 1;
+        this.switchPage();
+      }
     });
   };
 }

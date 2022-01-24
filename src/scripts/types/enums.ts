@@ -6,8 +6,15 @@ export enum Events {
 }
 
 export enum Methods {
-  get = 'get',
-  post = 'post',
-  put = 'put',
-  delete = 'delete',
+  get = 'GET',
+  post = 'POST',
+  put = 'PUT',
+  delete = 'DELETE',
+  patch = 'PATCH',
+}
+
+export enum EngineStates {
+  start = 'started',
+  stop = 'stopped',
+  drive = 'drive',
 }

@@ -1,5 +1,7 @@
 export const DEFAULT_CAR_COLOR: string = '#000000';
 
+export const CAR_WIDTH: number = 100;
+
 export const HEX_COLOR_LENGTH: number = 7;
 
 export const RGB_COLOR_COMBINATIONS_NUM: number = 16777215;
@@ -21,3 +23,5 @@ export const CAR_BRAND_NAMES = [
 ];
 
 export const CAR_MODEL_NAMES = ['Model S', 'Skyline', 'Mustang', 'Calina', 'M4', 'Mark II', 'RX-7', 'Chiron', 'C400', 'Camaro'];
+
+export const ENGINE_BROKEN = { success: false };

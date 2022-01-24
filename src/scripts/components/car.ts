@@ -48,8 +48,8 @@ export default class Car implements ICar {
           <p>${this.name}</p>
         </div>
         <div class="road">
-          ${car(this.color)}
-          ${flag}
+          ${car(this.color, this.id)}
+          ${flag(this.id)}
         </div>
       </div>
     `;
