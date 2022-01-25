@@ -15,6 +15,9 @@ const devServer = (isDev) => !isDev ? {} : {
 module.exports = ({ mode }) => ({
   mode: mode ? 'development' : 'production',
 	entry: './index.ts',
+  // optimization: {
+  //   minimize: false
+  // },
 	context: path.resolve(__dirname, 'src'),
 	output: {
     filename: 'bundle.js',

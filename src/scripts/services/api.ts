@@ -15,12 +15,9 @@ import {
 
 export const getAllCars = async (page: number, limit: number) => {
   const request = await fetch(ALL_CARS_URL(page, limit));
-  // store.cars = await request.json();
+  store.cars = await request.json();
+
   store.carsNum = Number(request.headers.get('X-Total-Count'));
-  return {
-    cars: await request.json(),
-    carsNum: Number(request.headers.get('X-Total-Count')),
-  };
 };
 
 export const getCurrentCar = async (id: string) => {
@@ -41,7 +38,7 @@ export const updateCurrentCar = async (id: string, newName: string, newColor: st
     body: JSON.stringify({ name: newName, color: newColor }),
   });
 
-  console.log(request.json());
+  return request;
 };
 
 export const deleteCurrentCar = async (id: string) => {

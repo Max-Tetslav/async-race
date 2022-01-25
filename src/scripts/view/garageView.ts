@@ -8,7 +8,6 @@ import getRandomCarName from '../utils/helpers/getRandomCarName';
 import getRandomHEX from '../utils/helpers/getRandomHex';
 import { DEFAULT_CARS_PER_PAGE_LIMIT } from '../services/consts';
 import store from '../services/store';
-import { CarList } from '../types/types';
 import { getDistanceBetweenElements } from '../utils/helpers/getHtmlDistance';
 import setAnimation from '../utils/helpers/setAnimation';
 import IDriveStatus from '../types/interfaces/iDriveStatus';
@@ -23,11 +22,7 @@ import {
   switchDriveMode,
   updateCurrentCar,
 } from '../services/api';
-
-interface CarReq {
-  cars: CarList;
-  carsNum: number;
-}
+import ICarResult from '../types/interfaces/iCarResult';
 
 export default class GarageView implements IGarageView {
   render = (): string => {
@@ -56,17 +51,19 @@ export default class GarageView implements IGarageView {
         <button id="prev-garage-page">Prev</button>
         <p>Page: <span id="garage-page"></span></p>
         <button id="next-garage-page">Next</button>
-      </div>  
+      </div>
+      <div class="winner-message-container" id="winner-message">
+        <button class="winner-message-btn" id="winner-message-close">Close</button>
+        <p id="winner-message-text"></p>
+      </div>
     </div>
     `;
   };
 
   afterRender = async (): Promise<void> => {
-    const { cars, carsNum }: CarReq = await getAllCars(store.garagePage, DEFAULT_CARS_PER_PAGE_LIMIT);
-    console.log(cars, carsNum);
-    const carsObjects: Car[] = cars.map((item: ICar) => new Car(item.name, item.color, item.id));
+    await getAllCars(store.garagePage, DEFAULT_CARS_PER_PAGE_LIMIT);
 
-    this.renderGarage(carsObjects, carsNum);
+    this.renderGarage(store.cars, store.carsNum);
 
     await this.addFormListeners();
     await this.addCarListeners();
@@ -77,30 +74,37 @@ export default class GarageView implements IGarageView {
     await this.updateCar();
     await this.createCar();
     await this.generateCars();
+    this.resetAllCars();
+    await this.startAllCars();
   };
 
   updateCar = async (): Promise<void> => {
     const submitUpdate: HTMLButtonElement = document.getElementById('submit-update-car') as HTMLButtonElement;
     const updateCarName: HTMLInputElement = document.getElementById('update-name-input') as HTMLInputElement;
     const updateCarColor: HTMLInputElement = document.getElementById('update-color-input') as HTMLInputElement;
-    const currentCar: ICar = await JSON.parse(localStorage.getItem('currentCar')!);
 
-    let updatedName: string = '';
-    let updatedColor: string = '';
+    let newName: string = '';
+    let newColor: string = '';
 
     updateCarName.addEventListener(Events.input, (): void => {
-      updatedName = updateCarName.value || currentCar.name;
+      if (updateCarName.value) {
+        newName = updateCarName.value;
+      }
     });
     updateCarColor.addEventListener(Events.input, (): void => {
-      updatedColor = updateCarColor.value || currentCar.color;
+      if (updateCarName.value) {
+        newColor = updateCarColor.value;
+      }
     });
-
-    updatedColor = updateCarColor.value || currentCar.color;
-    updatedName = updateCarName.value || currentCar.name;
 
     submitUpdate.addEventListener(Events.click, async (e: MouseEvent): Promise<void> => {
       e.preventDefault();
-      await updateCurrentCar(localStorage.getItem('carID')!, updatedName!, updatedColor!);
+      const currentCar: ICar = store.currentCar as ICar;
+      console.log(store.currentCar);
+      newColor = updateCarColor.value || currentCar.color;
+      newName = updateCarName.value || currentCar.name;
+
+      await updateCurrentCar(currentCar.id.toString(), newName, newColor);
       updateCarColor.value = DEFAULT_CAR_COLOR;
       updateCarName.value = '';
       updateCarName.placeholder = '';
@@ -152,10 +156,64 @@ export default class GarageView implements IGarageView {
     });
   };
 
-  renderGarage = (data: Car[], carsNum: number): void => {
+  startAllCars = async () => {
+    const raceBtn: HTMLButtonElement = document.getElementById('start-race') as HTMLButtonElement;
+    const resetBtn: HTMLButtonElement = document.getElementById('reset-race') as HTMLButtonElement;
+    resetBtn.disabled = true;
+
+    raceBtn.addEventListener(Events.click, async () => {
+      resetBtn.disabled = false;
+      raceBtn.disabled = true;
+      const promises = store.cars.map((item) => this.startCarHandler(item.id.toString()));
+
+      const finishRace = (await Promise.all(promises)).filter((item) => item.success);
+
+      const timeResults = finishRace.map((item) => item.drivingTime);
+
+      const bestTime = Math.min(...timeResults);
+
+      const winner = finishRace.find((item) => item.drivingTime === bestTime);
+
+      store.winner = winner as ICarResult;
+
+      this.renderRaceWinner(store.winner as ICarResult);
+    });
+  };
+
+  resetAllCars = () => {
+    const raceBtn: HTMLButtonElement = document.getElementById('start-race') as HTMLButtonElement;
+    const resetBtn: HTMLButtonElement = document.getElementById('reset-race') as HTMLButtonElement;
+    const stopBtns: HTMLButtonElement[] = [...document.querySelectorAll('.stop-button')] as HTMLButtonElement[];
+    resetBtn.disabled = true;
+
+    resetBtn.addEventListener(Events.click, () => {
+      resetBtn.disabled = true;
+      raceBtn.disabled = false;
+      stopBtns.forEach((item) => {
+        item.click();
+      });
+    });
+  };
+
+  renderRaceWinner = (winner: ICarResult) => {
+    const messageContainer: HTMLElement = document.getElementById('winner-message') as HTMLElement;
+    const messageRoot: HTMLElement = document.getElementById('winner-message-text') as HTMLElement;
+    const messageExit: HTMLButtonElement = document.getElementById('winner-message-close') as HTMLButtonElement;
+
+    const car = store.cars.find((item) => item.id.toString() === winner.carID) as ICar;
+
+    messageRoot.innerHTML = `Winner is ${car.name}. Time is ${(winner.drivingTime / 1000).toFixed(2)}sec. Congrats!`;
+    messageContainer.style.display = 'flex';
+
+    messageExit.addEventListener(Events.click, () => {
+      messageContainer.style.display = '';
+    });
+  };
+
+  renderGarage = (data: ICar[], carsNum: number): void => {
     const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
 
-    data.map((item: Car) => {
+    data.map((item: ICar) => {
       const car = new Car(item.name, item.color, item.id);
 
       target.innerHTML += car.render();
@@ -171,10 +229,9 @@ export default class GarageView implements IGarageView {
     const target: HTMLElement = document.getElementById('cars-root') as HTMLElement;
     target.innerHTML = '';
 
-    const { cars, carsNum }: CarReq = await getAllCars(store.garagePage, DEFAULT_CARS_PER_PAGE_LIMIT);
-    const carsObjects: Car[] = cars.map((item: ICar) => new Car(item.name, item.color, item.id));
+    await getAllCars(store.garagePage, DEFAULT_CARS_PER_PAGE_LIMIT);
 
-    this.renderGarage(carsObjects, carsNum);
+    this.renderGarage(store.cars, store.carsNum);
     await this.addCarListeners();
   };
 
@@ -211,7 +268,9 @@ export default class GarageView implements IGarageView {
 
     startBtn.forEach((item: HTMLButtonElement) => {
       item.addEventListener(Events.click, async (e: Event) => {
-        await this.startCarHandler(e);
+        const target: HTMLButtonElement = e.target as HTMLButtonElement;
+        const carID: string = getCarID(target.id);
+        await this.startCarHandler(carID);
       });
     });
 
@@ -220,7 +279,10 @@ export default class GarageView implements IGarageView {
     stopBtn.forEach((item: HTMLButtonElement) => {
       item.disabled = true;
       item.addEventListener(Events.click, async (e: Event) => {
-        await this.stopCarHandler(e);
+        const target: HTMLButtonElement = e.target as HTMLButtonElement;
+        const carID: string = getCarID(target.id);
+        await this.stopCarHandler(carID);
+        store.promises = [];
       });
     });
   };
@@ -232,7 +294,7 @@ export default class GarageView implements IGarageView {
     const carID: string = getCarID(target.id);
     const car: ICar = await getCurrentCar(carID);
 
-    localStorage.setItem('carID', carID);
+    store.currentCar = car;
 
     updateCarName.placeholder = car.name;
     updateCarColor.value = car.color;
@@ -246,9 +308,9 @@ export default class GarageView implements IGarageView {
     await this.updateGarage();
   };
 
-  startCarHandler = async (e: Event): Promise<void> => {
-    const target: HTMLButtonElement = e.target as HTMLButtonElement;
-    const carID: string = getCarID(target.id);
+  startCarHandler = async (carID: string): Promise<ICarResult> => {
+    const startBtn: HTMLButtonElement = document.getElementById(`start-${carID}`) as HTMLButtonElement;
+
     const { velocity, distance }: IEngineResp = await startEngine(carID);
     const drivingTime = Math.round(distance / velocity);
 
@@ -259,33 +321,30 @@ export default class GarageView implements IGarageView {
     store.animation[`car-${carID}`] = setAnimation(car, htmlDistance, drivingTime);
 
     const stopBtn: HTMLButtonElement = document.getElementById(`stop-${carID}`) as HTMLButtonElement;
-    target.disabled = true;
+    startBtn.disabled = true;
     stopBtn.disabled = false;
 
-    const { success } = await this.driveModeHandler(e);
+    const { success } = await this.driveModeHandler(carID);
 
     if (!success) window.cancelAnimationFrame(store.animation[`car-${carID}`].animationId);
 
-    // return { succes, carId, time };
+    return { success, carID, drivingTime };
   };
 
-  stopCarHandler = async (e: Event): Promise<void> => {
-    const target: HTMLButtonElement = e.target as HTMLButtonElement;
-    const carID: string = getCarID(target.id);
+  stopCarHandler = async (carID: string): Promise<void> => {
+    const stopBtn: HTMLButtonElement = document.getElementById(`stop-${carID}`) as HTMLButtonElement;
     window.cancelAnimationFrame(store.animation[`car-${carID}`].animationId);
     await stopEngine(carID);
     const car: HTMLElement = document.getElementById(`car-${carID}`) as HTMLElement;
 
     const startBtn: HTMLButtonElement = document.getElementById(`start-${carID}`) as HTMLButtonElement;
-    target.disabled = true;
+    stopBtn.disabled = true;
     startBtn.disabled = false;
 
     car.style.transform = `translateX(0px)`;
   };
 
-  driveModeHandler = async (e: Event): Promise<IDriveStatus> => {
-    const target: HTMLElement = e.target as HTMLElement;
-    const carID: string = getCarID(target.id);
+  driveModeHandler = async (carID: string): Promise<IDriveStatus> => {
     const response = await switchDriveMode(carID);
     return response;
   };

@@ -1,3 +1,3 @@
 export default interface IDriveStatus {
-  success: boolean;
+  success: boolean | undefined;
 }

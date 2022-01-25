@@ -5,6 +5,17 @@
 
 body{
   background-color: green;
+  box-sizing: border-box;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+ul{
+  margin: 0;
+  padding: 0;
 }
 
 a{

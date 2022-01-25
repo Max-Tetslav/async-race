@@ -1,6 +1,6 @@
 import ICar from '../types/interfaces/iCar';
 import flag from './svg/flag';
-import car from './svg/car';
+import car from './svg/carIcon';
 
 export default class Car implements ICar {
   name: string;
